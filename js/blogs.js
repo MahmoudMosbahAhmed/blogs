@@ -27,16 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initializePage() {
-        // Get category from URL if present
         const urlParams = new URLSearchParams(window.location.search);
         const categoryFromUrl = urlParams.get('category');
         if (categoryFromUrl) {
             currentCategory = categoryFromUrl;
         }
 
-        await populateFilters(); // Populate nav and filter tabs first
+        await populateFilters();
         setupEventListeners();
-        fetchPosts(true); // Initial fetch, clears the grid
+        fetchPosts(true);
     }
 
     async function fetchPosts(isNewQuery = false) {
@@ -63,7 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentContentType !== 'all') params.append('content_type', currentContentType);
             
             const response = await fetch(`${API_BASE_URL}/contents/?${params.toString()}`);
-            if (!response.ok) throw new Error(`Failed to fetch content: ${await response.text()}`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
+            }
+
+            // Check Content-Type
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
 
             const posts = await response.json();
 
@@ -91,11 +99,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function populateFilters() {
-        // Compromise: fetch a larger list once to get categories and types, as there's no dedicated endpoint.
-        // Ideal solution: A dedicated API endpoint like GET /api/v1/public/stats
         try {
             const response = await fetch(`${API_BASE_URL}/contents/?limit=100`);
-            if (!response.ok) throw new Error('Failed to fetch filter data');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch filter data: ${response.status} ${response.statusText}`);
+            }
+
+            // Check Content-Type
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
+
             const allPosts = await response.json();
 
             const categories = [...new Set(allPosts.map(post => post.category))].sort();
@@ -104,16 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
             navMenuLinks.innerHTML = '';
             filterTabsContainer.innerHTML = '';
             
-            // Populate Categories in Nav
             addCategoryFilter('all', currentCategory === 'all');
             categories.forEach(category => addCategoryFilter(category, currentCategory === category));
             
-            // Populate Content Types as Tabs
             addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
             contentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
 
         } catch (error) {
             console.error("Failed to populate filters:", error);
+            navMenuLinks.innerHTML = '<li><span style="color: red;">Error loading menu.</span></li>';
+            filterTabsContainer.innerHTML = '<p style="color: red;">Error loading filters.</p>';
         }
     }
 
@@ -160,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        fetchPosts(true); // Trigger a new query, clearing the grid
+        fetchPosts(true);
     }
     
     function displayPosts(postsToDisplay) {
@@ -172,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function createBlogCard(post) {
         const card = document.createElement('article');
         card.className = 'blog-card';
-        // CORRECTED: Use post._id instead of post.id
         card.onclick = () => window.location.href = `article.html?id=${post._id}`;
 
         const postDate = new Date(post.created_at).toLocaleDateString('en-US', {
