@@ -15,10 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`${API_BASE_URL}/contents/${id}`);
             if (!response.ok) {
-                if (response.status === 404) throw new Error('Article not found or not published.');
-                throw new Error('Article failed to load.');
+                throw new Error(`Article failed to load: ${response.status} ${response.statusText}`);
             }
-            
+
+            // Check Content-Type
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
+
             const data = await response.json();
             
             document.title = data.title;
@@ -27,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('breadcrumb-title').textContent = data.title;
             const postDate = new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('articleMeta').textContent = `By ${data.created_by} • ${postDate}`;
-            document.getElementById('articleContent').innerHTML = data.content; // For security, consider using a sanitizer like DOMPurify if content is user-generated.
+            document.getElementById('articleContent').innerHTML = data.content; // Consider using DOMPurify for user-generated content
             
             if (data.image_url) {
                 articleHeroImage.src = data.image_url;
@@ -57,8 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             const response = await fetch(`${API_BASE_URL}/contents/${currentId}/related`);
-            if (!response.ok) throw new Error('Could not fetch related blogs.');
-            
+            if (!response.ok) {
+                throw new Error(`Could not fetch related blogs: ${response.status} ${response.statusText}`);
+            }
+
+            // Check Content-Type
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
+
             const relatedData = await response.json();
             
             if (relatedData && relatedData.length > 0) {
@@ -80,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         blogs.forEach((post) => {
             const card = document.createElement('article');
             card.className = 'blog-card';
-            // CORRECTED: Use post._id instead of post.id
             card.onclick = () => window.location.href = `article.html?id=${post._id}`;
             
             const postDate = new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -97,11 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function initializeNavMenu() {
-        // This is a compromise because there is no public endpoint to get all categories.
-        // The ideal solution is a dedicated API endpoint like GET /api/v1/public/categories or /stats
         try {
-            const response = await fetch(`${API_BASE_URL}/contents/?limit=100`); // Fetch up to 100 to find categories
-            if (!response.ok) throw new Error('Failed to initialize navigation menu.');
+            const response = await fetch(`${API_BASE_URL}/contents/?limit=100`);
+            if (!response.ok) {
+                throw new Error(`Failed to initialize navigation menu: ${response.status} ${response.statusText}`);
+            }
+
+            // Check Content-Type
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
 
             const posts = await response.json();
             if (!Array.isArray(posts)) throw new TypeError("API response is not an array.");
@@ -112,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             categories.forEach(category => {
                 const navItem = document.createElement('li');
-                // Pass category as a query parameter for blogs.html to handle
                 navItem.innerHTML = `<a href="blogs.html?category=${category}" class="nav-link">${category.replace(/_/g, ' ')}</a>`;
                 navMenuLinks.appendChild(navItem);
             });
