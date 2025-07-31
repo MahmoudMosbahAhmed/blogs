@@ -103,7 +103,6 @@ function resetAndLoad() {
     loadContent(true);
 }
 
-// Fetches content from API
 async function loadContent(isNewQuery = false) {
     if (isLoading || allContentLoaded) return;
     isLoading = true;
@@ -122,12 +121,20 @@ async function loadContent(isNewQuery = false) {
 
         if (currentCategoryFilter !== 'all') params.append('category', currentCategoryFilter);
         if (currentStatusFilter !== 'all') params.append('statuses', currentStatusFilter);
-        // Note: The provided API spec does not support a direct text search query parameter in the GET /contents endpoint.
-        // The ideal solution is to use the POST /search endpoint. For simplicity here, we stick to the GET endpoint.
-        // If a search query exists, we could filter client-side, but it's better to request this feature in the backend.
 
-        const response = await fetch(`${API_BASE}/contents/?${params.toString()}`);
-        if (!response.ok) throw new Error(`Failed to load content: ${response.statusText}`);
+        const response = await fetch(`${API_BASE}/contents/?${params.toString()}`, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true',
+                'Content-Type': 'application/json'
+                // أضف 'Authorization': 'Token YOUR_TOKEN' إذا لزم الأمر
+            }
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('Response text:', text);
+            throw new Error(`Failed to load content: ${response.statusText}`);
+        }
         
         const newContent = await response.json();
         
@@ -146,17 +153,12 @@ async function loadContent(isNewQuery = false) {
         
         displayContent(newContent, isNewQuery);
 
-        // Handle "Load More" button visibility
         if (newContent.length < PAGE_LIMIT) {
             allContentLoaded = true;
             loadMoreBtn.style.display = 'none';
         } else {
             loadMoreBtn.style.display = 'block';
             loadMoreBtn.textContent = 'Load More';
-        }
-        
-        if (currentPage === 1) {
-            populateCategories(); // Repopulate categories based on current content
         }
     } catch (error) {
         console.error('Error loading content:', error);
@@ -166,13 +168,22 @@ async function loadContent(isNewQuery = false) {
     }
 }
 
-// Populates dynamic category filters
 async function populateCategories() {
-    // IDEAL: Fetch from a dedicated endpoint like `/api/v1/admin/contents/actions/stats`
-    // COMPROMISE: Extract from already loaded data or fetch a small batch.
     try {
-        const statsResponse = await fetch(`${API_BASE}/contents/actions/stats`);
-        if (!statsResponse.ok) return;
+        const statsResponse = await fetch(`${API_BASE}/contents/actions/stats`, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true',
+                'Content-Type': 'application/json'
+                // أضف 'Authorization': 'Token YOUR_TOKEN' إذا لزم الأمر
+            }
+        });
+
+        if (!statsResponse.ok) {
+            const text = await statsResponse.text();
+            console.error('Stats response text:', text);
+            return;
+        }
+
         const stats = await statsResponse.json();
         const categories = Object.keys(stats.by_category).sort();
         
