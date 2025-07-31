@@ -96,42 +96,48 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             isLoading = false;
         }
-    }
-
-    async function populateFilters() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/contents/?limit=100`);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch filter data: ${response.status} ${response.statusText}`);
-            }
-
-            // Check Content-Type
-            const contentType = response.headers.get('Content-Type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
-            }
-
-            const allPosts = await response.json();
-
-            const categories = [...new Set(allPosts.map(post => post.category))].sort();
-            const contentTypes = [...new Set(allPosts.map(post => post.content_type))].sort();
-
-            navMenuLinks.innerHTML = '';
-            filterTabsContainer.innerHTML = '';
-            
-            addCategoryFilter('all', currentCategory === 'all');
-            categories.forEach(category => addCategoryFilter(category, currentCategory === category));
-            
-            addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
-            contentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
-
-        } catch (error) {
-            console.error("Failed to populate filters:", error);
-            navMenuLinks.innerHTML = '<li><span style="color: red;">Error loading menu.</span></li>';
-            filterTabsContainer.innerHTML = '<p style="color: red;">Error loading filters.</p>';
         }
-    }
+        async function populateFilters() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/contents/?limit=100`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch filter data: ${response.status} ${response.statusText}`);
+                }
+        
+                const contentType = response.headers.get('Content-Type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+                }
+        
+                const allPosts = await response.json();
+        
+                const categories = [...new Set(allPosts.map(post => post.category))].sort();
+                const contentTypes = [...new Set(allPosts.map(post => post.content_type))].sort();
+        
+                navMenuLinks.innerHTML = '';
+                filterTabsContainer.innerHTML = '';
+                
+                addCategoryFilter('all', currentCategory === 'all');
+                categories.forEach(category => addCategoryFilter(category, currentCategory === category));
+                
+                addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
+                contentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
+        
+            } catch (error) {
+                console.error("Failed to populate filters:", error);
+                // Fallback to static data
+                const fallbackCategories = ['news', 'tutorials', 'opinions'];
+                const fallbackContentTypes = ['article', 'guide', 'review'];
+                navMenuLinks.innerHTML = '';
+                filterTabsContainer.innerHTML = '';
+                addCategoryFilter('all', currentCategory === 'all');
+                fallbackCategories.forEach(category => addCategoryFilter(category, currentCategory === category));
+                addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
+                fallbackContentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
+                navMenuLinks.innerHTML += '<li><span style="color: red;">Using fallback data due to API error.</span></li>';
+            }
+        }
 
     function addCategoryFilter(category, isActive = false) {
         const categoryName = category.replace(/_/g, ' ');
