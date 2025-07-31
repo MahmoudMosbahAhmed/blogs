@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Dashboard</title>
+    <link rel="stylesheet" href="css/dash.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-text">Content Dashboard</div>
+                <div class="user-info">
+                    <span>Welcome, Admin</span>
+                    <div class="avatar">A</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container main-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">NAVIGATION</h3>
+                <div class="nav-item active">
+                    <span>📊</span> Content
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">FILTER BY CATEGORY</h3>
+                <div class="category-filter" id="category-filter-list">
+                    <button class="filter-btn active" data-filter-type="category" data-filter-value="all">All Categories</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">FILTER BY STATUS</h3>
+                <div class="status-filter" id="status-filter-list">
+                    <button class="filter-btn active" data-filter-type="status" data-filter-value="all">All Statuses</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="published">Published</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="draft">Draft</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="generated">Generated</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="reviewed">Reviewed</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="generating">Generating</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="failed">Failed</button>
+                    <button class="filter-btn" data-filter-type="status" data-filter-value="archived">Archived</button>
+                </div>
+            </div>
+            
+             <div class="sidebar-section">
+                <h3 class="sidebar-title">SORT BY</h3>
+                <div class="sort-options" id="sort-options-list">
+                    <button class="filter-btn active" data-sort-by="created_at" data-sort-order="-1">Newest First</button>
+                    <button class="filter-btn" data-sort-by="created_at" data-sort-order="1">Oldest First</button>
+                    <button class="filter-btn" data-sort-by="title" data-sort-order="1">Title (A-Z)</button>
+                    <button class="filter-btn" data-sort-by="title" data-sort-order="-1">Title (Z-A)</button>
+                    <button class="filter-btn" data-sort-by="word_count" data-sort-order="-1">Word Count (High-Low)</button>
+                    <button class="filter-btn" data-sort-by="word_count" data-sort-order="1">Word Count (Low-High)</button>
+                </div>
+            </div>
+
+        </aside>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Manage Content</h1>
+                <button class="create-btn" onclick="showCreateModal()">
+                    <span>➕</span> Create New Content
+                </button>
+            </div>
+            
+            <div class="search-and-filter-bar" style="display: flex; gap: 15px; margin-bottom: 30px;">
+                 <input type="search" id="search-input" placeholder="Search by title or keyword..." style="flex-grow: 1; padding: 10px; border: 1px solid #ced4da; border-radius: 6px;">
+                 <button id="search-btn" class="create-btn" style="background-color: #6c757d;">Search</button>
+            </div>
+
+            <div id="content-container">
+                <div class="content-grid" id="content-grid"></div>
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <h2>No Content Found</h2>
+                    <p>Start by creating your first piece of content or adjust your filters.</p>
+                </div>
+                <div class="load-more" style="text-align: center; margin-top: 30px;">
+                    <button id="load-more-btn" class="create-btn" style="display: none;">Load More</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="create-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Create New Content</h2>
+                <button class="close-btn" onclick="hideCreateModal()">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); handleFormSubmit();">
+                <input type="hidden" id="content-id">
+
+                <div class="form-group">
+                    <label class="form-label" for="generation-method">Generation Method</label>
+                    <select class="form-select" id="generation-method" onchange="toggleGenerationFields()">
+                        <option value="ai">AI Generated (Author: AI System)</option>
+                        <option value="manual">Manual Creation</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="author-field" style="display: none;">
+                    <label class="form-label" for="author-name">Author Name</label>
+                    <input type="text" class="form-input" id="author-name" placeholder="Enter the author's name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="content-category">Category</label>
+                    <input type="text" class="form-input" id="content-category" placeholder="e.g., Technology, Health" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="content-type">Content Type</label>
+                    <select class="form-select" id="content-type" required>
+                        <option value="article">Article</option>
+                        <option value="course_review">Course Review</option>
+                        <option value="guide">Guide</option>
+                        <option value="tutorial">Tutorial</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="title-field">
+                    <label class="form-label" for="content-title">Title</label>
+                    <input type="text" class="form-input" id="content-title" placeholder="Enter content title">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="image-url">Image URL (Optional)</label>
+                    <input type="url" class="form-input" id="image-url" placeholder="https://example.com/image.jpg">
+                </div>
+
+                <div id="ai-fields">
+                    <div class="form-group">
+                        <label class="form-label" for="content-keywords">Keywords (comma separated)</label>
+                        <input type="text" class="form-input" id="content-keywords" placeholder="keyword1, keyword2, keyword3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="content-guidance">Guidance for AI (Optional)</label>
+                        <textarea class="form-textarea" id="content-guidance" placeholder="e.g., Write in a friendly tone..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label class="form-label" for="target-length">Target Length (Words)</label>
+                        <input type="number" class="form-input" id="target-length" value="800" min="300" max="3000">
+                    </div>
+                </div>
+
+                <div id="manual-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="manual-content">Content (HTML allowed)</label>
+                        <textarea class="form-textarea" id="manual-content" placeholder="Write your full content here..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="course-url">Optional Course URL</label>
+                    <input type="url" class="form-input" id="course-url" placeholder="https://yoursite.com/course/link">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="content-status">Status</label>
+                    <select class="form-select" id="content-status">
+                        <option value="draft">Draft</option>
+                        <option value="generated">Generated</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    Create Content
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal" id="preview-modal">
+        <div class="modal-content preview-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="preview-modal-title">Article Preview</h2>
+                <button class="close-btn" onclick="hidePreviewModal()">&times;</button>
+            </div>
+            <iframe id="preview-iframe" src="about:blank"></iframe>
+        </div>
+    </div>
+    
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content small-modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="confirm-modal-title">Confirm Action</h2>
+                <button class="close-btn" onclick="hideConfirmModal()">&times;</button>
+            </div>
+            <p id="confirm-modal-text">Are you sure you want to proceed with this action?</p>
+            <div class="form-group" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-outline" onclick="hideConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirm-modal-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dash.js"></script>
+</body>
+</html>

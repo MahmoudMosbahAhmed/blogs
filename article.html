@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article - Upscend</title>
+    <link rel="stylesheet" href="css/article.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo"></div>
+                <span class="logo-text">Blogs</span>
+            </div>
+            <div class="auth-buttons">
+                <a href="#" class="btn btn-outline">Sign Up</a>
+                <a href="#" class="btn btn-primary">Find Course</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-bar">
+        <div class="nav-content">
+             <ul class="nav-menu" id="navMenuLinks"></ul>
+        </div>
+    </nav>
+
+    <div class="breadcrumb">
+        <a href="blogs.html">Home</a>
+        <span>›</span>
+        <span id="breadcrumb-title">Loading Article...</span>
+    </div>
+
+    <img class="hero-image" id="articleHeroImage" src="" alt="Article Hero">
+
+    <main class="container">
+        <article>
+            <header class="article-header">
+                <div class="category" id="articleCategory"></div>
+                <h1 class="article-title" id="articleTitle"></h1>
+                <div class="article-meta">
+                    <span id="articleMeta"></span>
+                    <span id="readTime"></span>
+                </div>
+            </header>
+            <div class="article-content" id="articleContent">
+                </div>
+        </article>
+    </main>
+
+    <section class="related-blogs">
+        <h2>Related Blogs</h2>
+        <div class="blog-grid" id="relatedBlogsGrid">
+            </div>
+    </section>
+
+    <script src="js/article.js"></script>
+</body>
+</html>
