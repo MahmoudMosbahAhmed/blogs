@@ -1,6 +1,6 @@
 // app/js/article.js
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'http://localhost:8000/api/v1/public';
+    const API_BASE_URL = 'https://84d36f8f2985.ngrok-free.app/api/v1/public';
     const contentId = new URLSearchParams(window.location.search).get('id');
     const navMenuLinks = document.getElementById('navMenuLinks');
     const articleHeroImage = document.getElementById('articleHeroImage');
