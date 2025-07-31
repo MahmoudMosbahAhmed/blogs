@@ -13,7 +13,7 @@ let allContentLoaded = false; // Tracks if all content has been loaded
 
 let loadedContentData = []; // Caches data displayed on the page
 
-const API_BASE = 'http://localhost:8000/api/v1/admin';
+const API_BASE = 'https://84d36f8f2985.ngrok-free.app/api/v1/admin';
 
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
