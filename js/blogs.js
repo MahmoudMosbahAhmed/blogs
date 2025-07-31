@@ -1,4 +1,3 @@
-// app/js/blogs.js
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE_URL = 'https://84d36f8f2985.ngrok-free.app/api/v1/public';
     
@@ -61,12 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentCategory !== 'all') params.append('category', currentCategory);
             if (currentContentType !== 'all') params.append('content_type', currentContentType);
             
-            const response = await fetch(`${API_BASE_URL}/contents/?${params.toString()}`);
+            const response = await fetch(`${API_BASE_URL}/contents/?${params.toString()}`, {
+                headers: {
+                    'Accept': 'application/json' // Ensure we request JSON
+                }
+            });
             if (!response.ok) {
                 throw new Error(`Failed to fetch content: ${response.status} ${response.statusText}`);
             }
 
-            // Check Content-Type
+            // Check Content-Type to ensure response is JSON
             const contentType = response.headers.get('Content-Type');
             if (!contentType || !contentType.includes('application/json')) {
                 const text = await response.text();
@@ -93,51 +96,58 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Fetching posts failed:', error);
             blogGrid.innerHTML = '<p style="color: red;">Failed to load content. Please try again later.</p>';
+            loadMoreBtn.style.display = 'none';
         } finally {
             isLoading = false;
         }
-        }
-        async function populateFilters() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/contents/?limit=100`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch filter data: ${response.status} ${response.statusText}`);
+    }
+
+    async function populateFilters() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/contents/?limit=100`, {
+                headers: {
+                    'Accept': 'application/json' // Ensure we request JSON
                 }
-        
-                const contentType = response.headers.get('Content-Type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
-                }
-        
-                const allPosts = await response.json();
-        
-                const categories = [...new Set(allPosts.map(post => post.category))].sort();
-                const contentTypes = [...new Set(allPosts.map(post => post.content_type))].sort();
-        
-                navMenuLinks.innerHTML = '';
-                filterTabsContainer.innerHTML = '';
-                
-                addCategoryFilter('all', currentCategory === 'all');
-                categories.forEach(category => addCategoryFilter(category, currentCategory === category));
-                
-                addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
-                contentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
-        
-            } catch (error) {
-                console.error("Failed to populate filters:", error);
-                // Fallback to static data
-                const fallbackCategories = ['news', 'tutorials', 'opinions'];
-                const fallbackContentTypes = ['article', 'guide', 'review'];
-                navMenuLinks.innerHTML = '';
-                filterTabsContainer.innerHTML = '';
-                addCategoryFilter('all', currentCategory === 'all');
-                fallbackCategories.forEach(category => addCategoryFilter(category, currentCategory === category));
-                addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
-                fallbackContentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
-                navMenuLinks.innerHTML += '<li><span style="color: red;">Using fallback data due to API error.</span></li>';
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to fetch filter data: ${response.status} ${response.statusText}`);
             }
+
+            // Check Content-Type to ensure response is JSON
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON, received ${contentType}: ${text.slice(0, 100)}...`);
+            }
+
+            const allPosts = await response.json();
+
+            const categories = [...new Set(allPosts.map(post => post.category))].sort();
+            const contentTypes = [...new Set(allPosts.map(post => post.content_type))].sort();
+
+            navMenuLinks.innerHTML = '';
+            filterTabsContainer.innerHTML = '';
+            
+            addCategoryFilter('all', currentCategory === 'all');
+            categories.forEach(category => addCategoryFilter(category, currentCategory === category));
+            
+            addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
+            contentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
+
+        } catch (error) {
+            console.error("Failed to populate filters:", error);
+            // Fallback to static data to prevent UI breakage
+            const fallbackCategories = ['news', 'tutorials', 'opinions'];
+            const fallbackContentTypes = ['article', 'guide', 'review'];
+            navMenuLinks.innerHTML = '';
+            filterTabsContainer.innerHTML = '';
+            addCategoryFilter('all', currentCategory === 'all');
+            fallbackCategories.forEach(category => addCategoryFilter(category, currentCategory === category));
+            addFilterTab('all', currentContentType === 'all', 'content-type', 'All Types');
+            fallbackContentTypes.forEach(type => addFilterTab(type, false, 'content-type', type.replace(/_/g, ' ')));
+            navMenuLinks.innerHTML += '<li><span style="color: red;">Using fallback data due to API error.</span></li>';
         }
+    }
 
     function addCategoryFilter(category, isActive = false) {
         const categoryName = category.replace(/_/g, ' ');
